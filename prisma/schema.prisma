@@ -1,0 +1,67 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  name     String?
+  password String
+  imageUrl String?
+  roleId   Int?
+  role     Role?   @relation(fields: [roleId], references: [id])
+
+  @@index([email, roleId], map: "email_roleId")
+}
+
+model Role {
+  id          Int     @id @default(autoincrement())
+  description String?
+  name        String  @unique
+  users       User[]
+}
+
+model Client {
+  id          Int           @id @default(autoincrement())
+  uid         String        @default(cuid()) // codigo publico do cliente
+  name        String?
+  doc         String?       @unique
+  email       String?
+  dateOfBirth DateTime?     @db.Date
+  appointment Appointment[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  @@index([uid, doc, email])
+}
+
+model Appointment {
+  id       Int      @id @default(autoincrement())
+  uid      String   @default(cuid()) // Codigo do agendamento
+  clientId Int
+  client   Client?  @relation(fields: [clientId], references: [id])
+  date     DateTime
+  location String?
+  delivery Boolean  @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+model Menu {
+  id          Int     @id @default(autoincrement())
+  name        String
+  price       Decimal
+  photo       Json?   @db.Json
+  ingredients Json?   @db.Json
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
